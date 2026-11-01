@@ -1,14 +1,14 @@
 import type { PageId } from '@shared/types';
 
 const TITLES: Partial<Record<PageId, string>> = {
-  versions: 'Версии игры',
+
   mods: 'Моды',
   modpacks: 'Модпаки',
   java: 'Java Manager',
   worlds: 'Миры и карта',
   gallery: 'Галерея',
-  downloads: 'Загрузки',
-  console: 'Консоль',
+
+
   server: 'Сервер',
 };
 

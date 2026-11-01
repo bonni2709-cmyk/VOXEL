@@ -1,22 +1,10 @@
 import { app } from 'electron';
-import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { NICK_RE, type IpcResult, type OfflineProfile } from '../../shared/types';
+import { offlineUuid } from './uuid';
 
 const DEFAULT_NAME = 'VoxelPlayer';
-
-/**
- * Офлайн-UUID как в Java: UUID.nameUUIDFromBytes("OfflinePlayer:<nick>").
- * Не связан с аккаунтом Microsoft и не даёт токенов.
- */
-export function offlineUuid(nick: string): string {
-  const bytes = createHash('md5').update(`OfflinePlayer:${nick}`, 'utf8').digest();
-  bytes[6] = (bytes[6]! & 0x0f) | 0x30;
-  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
-  const hex = bytes.toString('hex');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
 
 function profilePath(): string {
   return join(app.getPath('userData'), 'profile.json');

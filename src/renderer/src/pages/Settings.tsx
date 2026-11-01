@@ -14,6 +14,8 @@ export function Settings() {
   const windowWidth = useSettings((s) => s.windowWidth);
   const windowHeight = useSettings((s) => s.windowHeight);
   const setWindow = useSettings((s) => s.setWindow);
+  const javaPath = useSettings((s) => s.javaPath);
+  const setJavaPath = useSettings((s) => s.setJavaPath);
   const [hexDraft, setHexDraft] = useState(accent ?? '');
   const [hexError, setHexError] = useState<string | null>(null);
 
@@ -105,6 +107,18 @@ export function Settings() {
           onChange={(e) => setWindow(windowWidth, Number(e.target.value))}
           className="w-24 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2 font-mono text-sm outline-none"
         />
+      </Glass>
+
+      <Glass className="flex flex-col gap-3 p-6">
+        <span className="text-sm font-medium">Путь к Java</span>
+        <input
+          value={javaPath}
+          onChange={(e) => setJavaPath(e.target.value)}
+          className="rounded-xl border border-white/[0.08] bg-black/25 px-4 py-2 font-mono text-sm outline-none focus:border-[var(--vx-accent)]/60"
+        />
+        <span className="text-[11px] text-[var(--vx-muted)]">
+          Автоскачивание Temurin появится в Java Manager. Пока укажите java.exe вручную или оставьте «java» из PATH.
+        </span>
       </Glass>
     </div>
   );

@@ -42,3 +42,40 @@ export interface IpcResult<T> {
   data?: T;
   error?: string;
 }
+
+export interface VersionSummary {
+  id: string;
+  type: 'release' | 'snapshot' | 'old_beta' | 'old_alpha';
+  releaseTime: string;
+}
+
+export type InstallStage = 'manifest' | 'client' | 'libraries' | 'natives' | 'assets' | 'done' | 'error';
+
+export interface InstallProgress {
+  versionId: string;
+  stage: InstallStage;
+  done: number;
+  total: number;
+  error?: string;
+}
+
+export interface LaunchOptions {
+  versionId: string;
+  ramMb: number;
+  width: number;
+  height: number;
+  javaPath: string;
+}
+
+export type LogLevel = 'info' | 'warn' | 'error' | 'success' | 'java';
+
+export interface LogLine {
+  level: LogLevel;
+  text: string;
+  time: string;
+}
+
+export interface LaunchExit {
+  code: number | null;
+  signal: string | null;
+}

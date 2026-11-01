@@ -7,6 +7,10 @@ import { Settings } from './pages/Settings';
 import { Placeholder } from './pages/Placeholder';
 import { applyTheme } from './theme';
 import { useSettings } from './store/settings';
+import { subscribeLauncherEvents, useLauncher } from './store/launcher';
+import { Versions } from './pages/Versions';
+import { Downloads } from './pages/Downloads';
+import { Console } from './pages/Console';
 
 function PageView() {
   const page = useSettings((s) => s.page);
@@ -14,6 +18,9 @@ function PageView() {
     case 'overview': return <Overview />;
     case 'profile': return <Profile />;
     case 'settings': return <Settings />;
+    case 'versions': return <Versions />;
+    case 'downloads': return <Downloads />;
+    case 'console': return <Console />;
     default: return <Placeholder page={page} />;
   }
 }
@@ -24,6 +31,12 @@ export function App() {
   const accent = useSettings((s) => s.accent);
 
   useEffect(() => applyTheme(theme, accent), [theme, accent]);
+
+  useEffect(() => {
+    const off = subscribeLauncherEvents();
+    void useLauncher.getState().refreshInstalled();
+    return off;
+  }, []);
 
   return (
     <Layout>
