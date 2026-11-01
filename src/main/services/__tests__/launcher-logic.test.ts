@@ -77,8 +77,9 @@ describe('резолвер зависимостей модов', () => {
 });
 
 describe('модпаки', () => {
-  const inst = join(root, 'inst');
+  let inst = '';
   beforeAll(async () => {
+    inst = join(root, 'inst');
     await mkdir(join(inst, 'mods'), { recursive: true });
     await mkdir(join(inst, 'kubejs'), { recursive: true });
     await mkdir(join(inst, 'logs'), { recursive: true });
