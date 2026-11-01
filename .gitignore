@@ -147,3 +147,9 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# VOXEL build outputs (EXE is built in CI, never in the sandbox)
+out/
+release/
+*.exe
+*.blockmap

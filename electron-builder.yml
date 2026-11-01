@@ -1,0 +1,21 @@
+appId: ru.voxel.launcher
+productName: VOXEL
+copyright: Copyright © 2026 VOXEL
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+asar: true
+compression: maximum
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  artifactName: VOXEL-${version}-portable-${arch}.${ext}
+  requestedExecutionLevel: asInvoker
+portable:
+  artifactName: VOXEL-${version}-portable-${arch}.${ext}
+publish: null
