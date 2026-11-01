@@ -22,7 +22,10 @@ export interface VersionJson {
   mainClass: string;
   assets?: string;
   assetIndex?: { id: string; url: string; sha1?: string; size?: number };
-  downloads?: { client?: { url: string; sha1?: string; size?: number } };
+  downloads?: {
+    client?: { url: string; sha1?: string; size?: number };
+    server?: { url: string; sha1?: string; size?: number };
+  };
   libraries: RawLibrary[];
   arguments?: VersionArguments;
   minecraftArguments?: string;

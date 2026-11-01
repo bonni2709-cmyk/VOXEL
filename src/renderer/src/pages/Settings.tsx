@@ -5,6 +5,8 @@ import { ACCENT_RE, THEME_IDS, type ThemeId } from '@shared/types';
 import { Glass } from '../components/Glass';
 import { PALETTES, applyTheme } from '../theme';
 import { useSettings } from '../store/settings';
+import { downscaleToDataUrl } from '../lib/image';
+import { useT } from '../i18n';
 
 export function Settings() {
   const theme = useSettings((s) => s.theme);
@@ -16,6 +18,12 @@ export function Settings() {
   const setWindow = useSettings((s) => s.setWindow);
   const javaPath = useSettings((s) => s.javaPath);
   const setJavaPath = useSettings((s) => s.setJavaPath);
+  const lang = useSettings((s) => s.lang);
+  const setLang = useSettings((s) => s.setLang);
+  const background = useSettings((s) => s.background);
+  const setBackground = useSettings((s) => s.setBackground);
+  const [bgError, setBgError] = useState<string | null>(null);
+  const t = useT();
   const [hexDraft, setHexDraft] = useState(accent ?? '');
   const [hexError, setHexError] = useState<string | null>(null);
 
@@ -119,6 +127,51 @@ export function Settings() {
         <span className="text-[11px] text-[var(--vx-muted)]">
           «auto» — Java нужной major-версии из Java Manager. Можно указать свой java.exe.
         </span>
+      </Glass>
+      <Glass className="flex flex-col gap-3 p-6">
+        <span className="text-sm font-medium">{t('language')}</span>
+        <div className="flex gap-2">
+          {(['ru', 'en'] as const).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`rounded-xl px-4 py-2 text-sm ${lang === l ? 'bg-[var(--vx-accent)] text-black/80' : 'bg-white/[0.06]'}`}
+            >
+              {l === 'ru' ? 'Русский' : 'English'}
+            </button>
+          ))}
+        </div>
+        <span className="text-[11px] text-[var(--vx-muted)]">Переведены навигация и заголовки; остальные экраны пока на русском.</span>
+      </Glass>
+
+      <Glass className="flex flex-col gap-3 p-6">
+        <span className="text-sm font-medium">Фон интерфейса</span>
+        <div className="flex items-center gap-3">
+          <label className="cursor-pointer rounded-xl bg-white/[0.06] px-4 py-2 text-sm">
+            Выбрать PNG/JPG
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (!f) return;
+                try {
+                  setBgError(null);
+                  setBackground(await downscaleToDataUrl(f));
+                } catch (err) {
+                  setBgError((err as Error).message);
+                }
+              }}
+            />
+          </label>
+          {background && (
+            <button onClick={() => setBackground(null)} className="text-sm text-[var(--vx-muted)] underline underline-offset-4">Убрать фон</button>
+          )}
+        </div>
+        {bgError && <span className="text-[11px] text-red-400">{bgError}</span>}
+        <span className="text-[11px] text-[var(--vx-muted)]">До 16 МБ; изображение уменьшается до 2048 px.</span>
       </Glass>
     </div>
   );

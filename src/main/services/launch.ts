@@ -15,6 +15,13 @@ import { analyzeCrash } from './crash';
 let current: ChildProcess | null = null;
 let recent: string[] = [];
 
+export interface LaunchProfile {
+  name: string;
+  uuid: string;
+  /** Токен Minecraft для Microsoft-аккаунта; для офлайн не задаётся. */
+  accessToken?: string;
+}
+
 export interface LaunchCommand {
   command: string;
   args: string[];
@@ -36,7 +43,7 @@ export async function resolveJava(javaPath: string, major: number, paths: DataPa
 /** Собирает argv без shell: JVM-флаги, classpath, mainClass, game-аргументы. */
 export async function buildLaunchCommand(
   opts: LaunchOptions,
-  profile: { name: string; uuid: string },
+  profile: LaunchProfile,
   paths: DataPaths,
   ctx: RuleContext,
   vj: VersionJson,
@@ -58,11 +65,11 @@ export async function buildLaunchCommand(
     assets_root: paths.assets,
     assets_index_name: vj.assetIndex?.id ?? vj.assets ?? 'legacy',
     auth_uuid: profile.uuid,
-    auth_access_token: '0',
+    auth_access_token: profile.accessToken ?? '0',
     auth_session: '0',
     auth_xuid: '0',
     clientid: '0',
-    user_type: 'legacy',
+    user_type: profile.accessToken ? 'msa' : 'legacy',
     user_properties: '{}',
     version_type: vj.type,
     natives_directory: natives,
@@ -100,7 +107,7 @@ export function isRunning(): boolean {
 
 export async function startGame(
   opts: LaunchOptions,
-  profile: { name: string; uuid: string },
+  profile: LaunchProfile,
   paths: DataPaths,
   ctx: RuleContext,
   onLog: (l: LogLine) => void,

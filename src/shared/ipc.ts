@@ -19,6 +19,25 @@ export const IPC = {
   modsInstall: 'mods:install',
   modsList: 'mods:list',
   crashAnalyze: 'crash:analyze',
+  authStatus: 'auth:status',
+  authSignIn: 'auth:signin',
+  authSignOut: 'auth:signout',
+  serverStatus: 'server:status',
+  serverInstall: 'server:install',
+  serverConfigure: 'server:configure',
+  serverStart: 'server:start',
+  serverStop: 'server:stop',
+  serverCommand: 'server:command',
+  packExportZip: 'pack:export-zip',
+  packExportMrpack: 'pack:export-mrpack',
+  packImport: 'pack:import',
+  scriptsList: 'scripts:list',
+  scriptsSet: 'scripts:set',
+  depsResolve: 'deps:resolve',
+  skinsList: 'skins:list',
+  skinsSave: 'skins:save',
+  skinsImport: 'skins:import',
+  skinsDelete: 'skins:delete',
 } as const;
 
 /** События main → renderer. */
@@ -26,4 +45,7 @@ export const EVENTS = {
   installProgress: 'install:progress',
   launchLog: 'launch:log',
   launchExit: 'launch:exit',
+  serverLog: 'server:log',
+  serverExit: 'server:exit',
+  packProgress: 'pack:progress',
 } as const;

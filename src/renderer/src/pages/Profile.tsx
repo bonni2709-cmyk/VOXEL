@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
-import type { OfflineProfile } from '@shared/types';
+import type { AccountView, OfflineProfile } from '@shared/types';
 import { NICK_RE } from '@shared/types';
 import { Glass } from '../components/Glass';
+import { useSettings } from '../store/settings';
 
 export function Profile() {
+  const msClientId = useSettings((s) => s.msClientId);
+  const setMsClientId = useSettings((s) => s.setMsClientId);
+  const [account, setAccount] = useState<AccountView | null>(null);
   const [profile, setProfile] = useState<OfflineProfile | null>(null);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = () => void window.voxel.auth.status().then(setAccount);
 
   useEffect(() => {
     void window.voxel.profile.get().then((p) => {
       setProfile(p);
       setDraft(p.name);
     });
+    refresh();
   }, []);
 
   const valid = NICK_RE.test(draft.trim());
@@ -25,10 +34,27 @@ export function Profile() {
       setError(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
+      refresh();
     } else {
       setError(res.error ?? 'Не удалось сохранить.');
     }
   }
+
+  async function signIn() {
+    setBusy(true);
+    setAuthError(null);
+    const res = await window.voxel.auth.signIn(msClientId);
+    setBusy(false);
+    if (res.ok && res.data) setAccount(res.data);
+    else setAuthError(res.error ?? 'Не удалось войти');
+  }
+
+  async function signOut() {
+    await window.voxel.auth.signOut();
+    refresh();
+  }
+
+  const isMs = account?.kind === 'microsoft';
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -37,24 +63,47 @@ export function Profile() {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Ваш образ</h1>
       </header>
 
-      <Glass className="p-6">
+      <Glass className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm text-[var(--vx-muted)]">Microsoft-аккаунт (Java Edition)</div>
-            <p className="mt-1 text-xs text-[var(--vx-muted)]">Вход через Microsoft появится позже.</p>
+            <div className="text-sm font-medium">Microsoft-аккаунт (Java Edition)</div>
+            <p className="mt-1 text-xs text-[var(--vx-muted)]">
+              {isMs ? `Вход выполнен: ${account?.name}` : 'Вход через OAuth Microsoft. Токен хранится в зашифрованном виде.'}
+            </p>
           </div>
-          <button disabled className="rounded-xl bg-white/[0.05] px-4 py-2 text-sm opacity-50">
-            Войти с Microsoft
-          </button>
+          {isMs ? (
+            <button onClick={() => void signOut()} className="rounded-xl bg-white/[0.06] px-4 py-2 text-sm">Выйти</button>
+          ) : (
+            <button
+              onClick={() => void signIn()}
+              disabled={busy || !msClientId}
+              className="rounded-xl bg-[var(--vx-accent)] px-4 py-2 text-sm font-medium text-black/80 disabled:opacity-40"
+            >
+              {busy ? 'Ожидание входа…' : 'Войти с Microsoft'}
+            </button>
+          )}
         </div>
+        {!msClientId && (
+          <p className="text-[11px] text-[var(--vx-muted)]">
+            Нужен Azure Client ID приложения. Укажите его ниже в «Аккаунт Microsoft».
+          </p>
+        )}
+        {authError && <p className="text-[11px] text-red-400">{authError}</p>}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs text-[var(--vx-muted)]">Azure Client ID</span>
+          <input
+            value={msClientId}
+            onChange={(e) => setMsClientId(e.target.value)}
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            className="rounded-xl border border-white/[0.08] bg-black/25 px-4 py-2 font-mono text-sm outline-none focus:border-[var(--vx-accent)]/60"
+          />
+        </label>
       </Glass>
 
       <Glass className="flex flex-col gap-4 p-6">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Офлайн-профиль</span>
-          <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] tracking-widest text-[var(--vx-muted)]">
-            OFFLINE
-          </span>
+          <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] tracking-widest text-[var(--vx-muted)]">OFFLINE</span>
         </div>
 
         <label className="flex flex-col gap-1.5">

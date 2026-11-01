@@ -1,29 +1,32 @@
 import { motion } from 'framer-motion';
 import {
   Box, Cpu, Download, Gamepad2, Globe, Image, Package, Puzzle,
-  Server, Settings, SquareTerminal, User, Home,
+  Server, Settings, SquareTerminal, User, Home, Shirt,
 } from 'lucide-react';
 import type { PageId } from '@shared/types';
 import { useSettings } from '../store/settings';
+import { useT } from '../i18n';
 
-const NAV: { id: PageId; label: string; icon: typeof Home }[] = [
-  { id: 'overview', label: 'Обзор', icon: Home },
-  { id: 'versions', label: 'Версии игры', icon: Gamepad2 },
-  { id: 'mods', label: 'Моды', icon: Puzzle },
-  { id: 'modpacks', label: 'Модпаки', icon: Package },
-  { id: 'java', label: 'Java Manager', icon: Cpu },
-  { id: 'worlds', label: 'Миры и карта', icon: Globe },
-  { id: 'gallery', label: 'Галерея', icon: Image },
-  { id: 'downloads', label: 'Загрузки', icon: Download },
-  { id: 'console', label: 'Консоль', icon: SquareTerminal },
-  { id: 'server', label: 'Сервер', icon: Server },
-  { id: 'profile', label: 'Профиль', icon: User },
-  { id: 'settings', label: 'Настройки', icon: Settings },
+const NAV: { id: PageId; icon: typeof Home }[] = [
+  { id: 'overview', icon: Home },
+  { id: 'versions', icon: Gamepad2 },
+  { id: 'mods', icon: Puzzle },
+  { id: 'modpacks', icon: Package },
+  { id: 'java', icon: Cpu },
+  { id: 'worlds', icon: Globe },
+  { id: 'gallery', icon: Image },
+  { id: 'downloads', icon: Download },
+  { id: 'console', icon: SquareTerminal },
+  { id: 'server', icon: Server },
+  { id: 'skins', icon: Shirt },
+  { id: 'profile', icon: User },
+  { id: 'settings', icon: Settings },
 ];
 
 export function Sidebar() {
   const page = useSettings((s) => s.page);
   const setPage = useSettings((s) => s.setPage);
+  const t = useT();
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-white/[0.05] bg-black/20 px-4 py-5 backdrop-blur-xl">
@@ -38,7 +41,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1 overflow-y-auto">
-        {NAV.map(({ id, label, icon: Icon }) => {
+        {NAV.map(({ id, icon: Icon }) => {
           const active = page === id;
           return (
             <button
@@ -55,7 +58,7 @@ export function Sidebar() {
                 />
               )}
               <Icon size={17} className="relative z-10" />
-              <span className="relative z-10">{label}</span>
+              <span className="relative z-10">{t(id)}</span>
             </button>
           );
         })}

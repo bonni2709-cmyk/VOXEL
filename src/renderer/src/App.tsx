@@ -15,6 +15,9 @@ import { JavaManager } from './pages/JavaManager';
 import { Worlds } from './pages/Worlds';
 import { Gallery } from './pages/Gallery';
 import { Mods } from './pages/Mods';
+import { Modpacks } from './pages/Modpacks';
+import { Server } from './pages/Server';
+import { SkinStudio } from './pages/SkinStudio';
 
 function PageView() {
   const page = useSettings((s) => s.page);
@@ -29,6 +32,9 @@ function PageView() {
     case 'worlds': return <Worlds />;
     case 'gallery': return <Gallery />;
     case 'mods': return <Mods />;
+    case 'modpacks': return <Modpacks />;
+    case 'server': return <Server />;
+    case 'skins': return <SkinStudio />;
     default: return <Placeholder page={page} />;
   }
 }

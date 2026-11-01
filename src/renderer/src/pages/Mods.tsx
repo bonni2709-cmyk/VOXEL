@@ -12,12 +12,20 @@ export function Mods() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [deps, setDeps] = useState<{ kind: string; mod: string; message: string }[] | null>(null);
 
   const refresh = () => {
     if (!id) return;
     void window.voxel.mods.list(id).then((r) => r.ok && r.data && setInstalled(r.data));
   };
   useEffect(refresh, [id]);
+
+  async function checkDeps() {
+    if (!id) return;
+    const res = await window.voxel.deps.resolve(id);
+    if (res.ok && res.data) setDeps(res.data);
+    else setError(res.error ?? 'Не удалось проверить зависимости');
+  }
 
   async function search() {
     if (!id) return;
@@ -79,6 +87,20 @@ export function Mods() {
           </div>
         ))}
         {hits.length === 0 && <div className="px-5 py-8 text-center text-sm text-[var(--vx-muted)]">Введите запрос и нажмите «Найти».</div>}
+      </Glass>
+
+      <Glass className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-medium">Dependency & Conflict Resolver</div>
+          <button disabled={!id} onClick={() => void checkDeps()} className="rounded-lg bg-white/[0.06] px-3 py-1.5 text-sm disabled:opacity-40">Проверить</button>
+        </div>
+        {deps && deps.length === 0 && <p className="text-sm text-[var(--vx-accent)]">Конфликтов и пропущенных зависимостей не найдено.</p>}
+        {deps?.map((d, i) => (
+          <div key={i} className="text-sm">
+            <span className={d.kind === 'conflict' || d.kind === 'missing' ? 'text-red-400' : 'text-amber-300'}>[{d.kind}]</span>{' '}
+            <span className="font-mono text-[12px]">{d.mod}</span>: {d.message}
+          </div>
+        ))}
       </Glass>
 
       <Glass className="p-5">

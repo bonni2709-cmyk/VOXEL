@@ -1,3 +1,5 @@
+export type Lang = 'ru' | 'en';
+
 export type ThemeId = 'emerald' | 'sapphire' | 'ruby' | 'amethyst' | 'light';
 
 export const THEME_IDS: ThemeId[] = ['emerald', 'sapphire', 'ruby', 'amethyst', 'light'];
@@ -13,6 +15,7 @@ export type PageId =
   | 'downloads'
   | 'console'
   | 'server'
+  | 'skins'
   | 'profile'
   | 'settings';
 
@@ -105,4 +108,39 @@ export interface CrashFinding {
   title: string;
   hint: string;
   line: string;
+}
+
+/** Аккаунт для показа в UI (без токенов). */
+export interface AccountView {
+  kind: 'offline' | 'microsoft';
+  name: string;
+  uuid: string;
+}
+
+export interface ServerStatus {
+  installed: boolean;
+  running: boolean;
+  type: 'vanilla' | 'paper' | 'fabric' | null;
+  mc: string | null;
+  port: number;
+  motd: string;
+  onlineMode: boolean;
+  backup: '30m' | '1h' | '24h' | 'off';
+}
+
+export interface ScriptToggle {
+  dir: string;
+  enabled: boolean;
+  present: boolean;
+}
+
+export interface DependencyFinding {
+  kind: 'missing' | 'version' | 'conflict' | 'minecraft' | 'unknown-range';
+  mod: string;
+  message: string;
+}
+
+export interface SkinEntry {
+  name: string;
+  dataUrl: string;
 }

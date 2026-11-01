@@ -22,6 +22,8 @@ import { installMod, listInstalledMods, searchMods } from './services/modrinth';
 import { analyzeCrash } from './services/crash';
 import type { CrashFinding, GalleryItem, ModHit, WorldInfo } from '../shared/types';
 import { existsSync } from 'node:fs';
+import { registerExtraIpc } from './ipc/extra';
+import { loadSession } from './services/msauth-flow';
 
 const installs = new Map<string, AbortController>();
 
@@ -78,6 +80,7 @@ async function listInstalled(): Promise<string[]> {
 }
 
 function registerIpc(): void {
+  registerExtraIpc({ send });
   ipcMain.handle(IPC.appInfo, (): AppInfo => ({
     name: 'VOXEL',
     version: app.getVersion(),
@@ -131,7 +134,10 @@ function registerIpc(): void {
 
   ipcMain.handle(IPC.launchStart, async (_e, opts: LaunchOptions): Promise<IpcResult<{ pid: number }>> => {
     try {
-      const profile = await getProfile();
+      const ms = await loadSession(dataRoot());
+      const profile = ms
+        ? { name: ms.name, uuid: ms.uuid, accessToken: ms.accessToken }
+        : await getProfile();
       const paths = dataPaths(dataRoot());
       const pid = await startGame(
         opts,
