@@ -1,4 +1,18 @@
 @import "tailwindcss";
 
+:root {
+  --vx-bg: #0F1115;
+  --vx-panel: #161A21;
+  --vx-text: #E6E9EF;
+  --vx-muted: #8A93A3;
+  --vx-accent: #92BCF8;
+}
+
 html, body, #root { height: 100%; margin: 0; }
-body { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; background: #0F1115; }
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--vx-bg);
+  color: var(--vx-text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}

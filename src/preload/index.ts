@@ -1,12 +1,15 @@
-import { contextBridge } from 'electron';
-import type { AppInfo } from '../shared/types';
+import { contextBridge, ipcRenderer } from 'electron';
+import { IPC } from '../shared/ipc';
+import type { AppInfo, IpcResult, OfflineProfile, SystemInfo } from '../shared/types';
 
 const api = {
-  appInfo: (): AppInfo => ({
-    name: 'VOXEL',
-    version: '4.0.0',
-    platform: process.platform,
-  }),
+  appInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.appInfo),
+  systemInfo: (): Promise<SystemInfo> => ipcRenderer.invoke(IPC.systemInfo),
+  profile: {
+    get: (): Promise<OfflineProfile> => ipcRenderer.invoke(IPC.profileGet),
+    setName: (name: string): Promise<IpcResult<OfflineProfile>> =>
+      ipcRenderer.invoke(IPC.profileSetName, name),
+  },
 };
 
 contextBridge.exposeInMainWorld('voxel', api);
