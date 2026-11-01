@@ -219,3 +219,14 @@ describe('Java для версии Minecraft', () => {
     expect(javaMajorFor('26.3')).toBe(25);
   });
 });
+
+import { parseMyMemory } from '../translate';
+describe('перевод описаний', () => {
+  it('разбирает успешный ответ MyMemory и отбрасывает ошибки', () => {
+    expect(parseMyMemory({ responseStatus: 200, responseData: { translatedText: 'Привет' } })).toBe('Привет');
+    expect(parseMyMemory({ responseStatus: '200', responseData: { translatedText: 'Ок' } })).toBe('Ок');
+    expect(parseMyMemory({ responseStatus: 403, responseData: { translatedText: 'x' } })).toBeNull();
+    expect(parseMyMemory({ responseStatus: 200, responseData: { translatedText: '  ' } })).toBeNull();
+    expect(parseMyMemory(null)).toBeNull();
+  });
+});

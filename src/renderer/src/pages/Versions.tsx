@@ -5,6 +5,7 @@ import type { VersionSummary } from '@shared/types';
 import { Glass } from '../components/Glass';
 import { useLauncher } from '../store/launcher';
 import { useSettings } from '../store/settings';
+import coverUrl from '../assets/hero.jpg';
 
 type Tab = 'release' | 'snapshot' | 'installed';
 
@@ -53,6 +54,12 @@ export function Versions() {
         </div>
         <button onClick={() => void loadVersions()} className="rounded-xl bg-white/[0.06] px-4 py-2 text-sm">Обновить</button>
       </header>
+
+      <div className="relative h-36 overflow-hidden rounded-2xl border border-white/5">
+        <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0F1115] via-[#0F1115]/40 to-transparent" />
+        <div className="absolute bottom-4 left-5 text-xs uppercase tracking-[0.3em] text-white/70">Релизы · Снапшоты · Fabric</div>
+      </div>
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex rounded-xl bg-white/[0.04] p-1">

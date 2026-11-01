@@ -12,10 +12,10 @@ interface Palette {
 }
 
 export const PALETTES: Record<ThemeId, Palette> = {
-  emerald: { label: 'Emerald', caption: 'Привычная глубина', dark: true, bg: '#0F1115', panel: '#161A21', text: '#E6E9EF', muted: '#8A93A3', accent: '#6FD3A4' },
-  sapphire: { label: 'Sapphire', caption: 'Спокойствие океана', dark: true, bg: '#0F1115', panel: '#161A21', text: '#E6E9EF', muted: '#8A93A3', accent: '#92BCF8' },
-  ruby: { label: 'Ruby', caption: 'Энергия приключений', dark: true, bg: '#120F11', panel: '#1B1518', text: '#F1E6E8', muted: '#A38A90', accent: '#E8838A' },
-  amethyst: { label: 'Amethyst', caption: 'Немного магии', dark: true, bg: '#100F14', panel: '#18161F', text: '#ECE6F4', muted: '#9489A8', accent: '#B99CF0' },
+  emerald: { label: 'Emerald', caption: 'Привычная глубина', dark: true, bg: '#0F1115', panel: '#161A21', text: '#E6E9EF', muted: '#8A93A3', accent: '#2ECC71' },
+  sapphire: { label: 'Sapphire', caption: 'Спокойствие океана', dark: true, bg: '#0F1115', panel: '#161A21', text: '#E6E9EF', muted: '#8A93A3', accent: '#4A90E2' },
+  ruby: { label: 'Ruby', caption: 'Энергия приключений', dark: true, bg: '#120F11', panel: '#1B1518', text: '#F1E6E8', muted: '#A38A90', accent: '#E06666' },
+  amethyst: { label: 'Amethyst', caption: 'Тихая магия', dark: true, bg: '#100F14', panel: '#18161F', text: '#ECE6F4', muted: '#9489A8', accent: '#A78BDB' },
   light: { label: 'Light Mode', caption: 'Больше дневного света', dark: false, bg: '#F3F5F7', panel: '#FFFFFF', text: '#1B1F26', muted: '#667085', accent: '#3B82C4' },
 };
 

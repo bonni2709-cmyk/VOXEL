@@ -4,6 +4,7 @@ import { Download, Play, ShieldCheck, Square } from 'lucide-react';
 import { Glass } from '../components/Glass';
 import { useSettings } from '../store/settings';
 import { useLauncher } from '../store/launcher';
+import heroUrl from '../assets/hero.jpg';
 
 export function Overview() {
   const ramMb = useSettings((s) => s.ramMb);
@@ -28,7 +29,7 @@ export function Overview() {
   let action;
   if (!selected) {
     action = (
-      <button onClick={() => setPage('versions')} className="h-14 rounded-2xl bg-white/[0.06] px-8 text-[15px]">
+      <button onClick={() => setPage('versions')} className="h-14 rounded-2xl bg-white/[0.08] px-8 text-[15px] backdrop-blur">
         Выбрать версию
       </button>
     );
@@ -43,7 +44,7 @@ export function Overview() {
       <button
         disabled={installing !== null}
         onClick={() => void install(selected)}
-        className="flex h-14 items-center gap-2 rounded-2xl bg-[var(--vx-accent)] px-8 text-[15px] font-medium text-black/80 disabled:opacity-50"
+        className="flex h-14 items-center gap-2 rounded-2xl bg-[var(--vx-accent)] px-8 text-[15px] font-medium text-black/85 shadow-[0_0_30px_-8px_var(--vx-accent)] disabled:opacity-50"
       >
         <Download size={18} /> {installing ? 'Установка…' : 'Установить'}
       </button>
@@ -51,57 +52,66 @@ export function Overview() {
   } else {
     action = (
       <motion.button
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.97 }}
         onClick={() => void play(selected, ramMb, javaPath)}
-        className="flex h-14 items-center gap-2 rounded-2xl bg-[var(--vx-accent)] px-8 text-[15px] font-medium text-black/80"
+        className="flex h-16 items-center gap-3 rounded-2xl bg-[var(--vx-accent)] px-12 text-lg font-semibold text-black/85 shadow-[0_0_40px_-6px_var(--vx-accent)]"
       >
-        <Play size={18} fill="currentColor" /> Играть
+        <Play size={22} fill="currentColor" /> Играть
       </motion.button>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      <motion.header initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <p className="text-[11px] uppercase tracking-[0.3em] text-[var(--vx-muted)]">Обзор</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Готовы к приключению?</h1>
-      </motion.header>
-
-      <Glass className="flex items-center justify-between gap-6 p-8">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-[var(--vx-muted)]">
-            <ShieldCheck size={16} className="text-[var(--vx-accent)]" />
-            {selected ? `Minecraft ${selected}` : 'Версия не выбрана'} · {isInstalled ? 'установлена' : 'не установлена'}
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative h-72 overflow-hidden rounded-3xl border border-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+      >
+        <img src={heroUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F1115] via-[#0F1115]/50 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-8">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-[var(--vx-muted)]">Обзор</p>
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white drop-shadow-lg">Новый мир. Твоя история</h1>
+            <div className="mt-3 flex items-center gap-2 text-sm text-white/70">
+              <ShieldCheck size={16} className="text-[var(--vx-accent)]" />
+              {selected ? `Minecraft ${selected}` : 'Версия не выбрана'} · {isInstalled ? 'установлена' : 'не установлена'}
+            </div>
           </div>
-          <p className="mt-2 max-w-md text-sm text-[var(--vx-muted)]">
-            Файлы проверяются по SHA-1 при установке. Java берётся из настроек (по умолчанию «java» из PATH).
-          </p>
+          {action}
         </div>
-        {action}
-      </Glass>
+      </motion.section>
 
-      <Glass className="p-6">
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm text-[var(--vx-muted)]">Выделенная ОЗУ</span>
-          <span className="font-mono text-lg">
-            {ramMb} <span className="text-xs text-[var(--vx-muted)]">МБ</span>
-          </span>
-        </div>
-        <input
-          type="range"
-          min={512}
-          max={maxMb}
-          step={256}
-          value={Math.min(ramMb, maxMb)}
-          onChange={(e) => setRam(Number(e.target.value))}
-          className="mt-4 w-full accent-[var(--vx-accent)]"
-        />
-        <div className="mt-2 flex justify-between text-[10px] text-[var(--vx-muted)]">
-          <span>512 МБ</span>
-          <span>На устройстве {(maxMb / 1024).toFixed(1)} ГБ</span>
-        </div>
-      </Glass>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.1 }}
+      >
+        <Glass className="p-6">
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm text-[var(--vx-muted)]">Выделенная ОЗУ</span>
+            <span className="font-mono text-lg">
+              {ramMb} <span className="text-xs text-[var(--vx-muted)]">МБ</span>
+            </span>
+          </div>
+          <input
+            type="range"
+            min={512}
+            max={maxMb}
+            step={256}
+            value={Math.min(ramMb, maxMb)}
+            onChange={(e) => setRam(Number(e.target.value))}
+            className="mt-4 w-full accent-[var(--vx-accent)]"
+          />
+          <div className="mt-2 flex justify-between text-[10px] text-[var(--vx-muted)]">
+            <span>512 МБ</span>
+            <span>На устройстве {(maxMb / 1024).toFixed(1)} ГБ</span>
+          </div>
+        </Glass>
+      </motion.div>
     </div>
   );
 }

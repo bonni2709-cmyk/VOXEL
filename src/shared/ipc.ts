@@ -38,6 +38,7 @@ export const IPC = {
   skinsSave: 'skins:save',
   skinsImport: 'skins:import',
   skinsDelete: 'skins:delete',
+  translateText: 'translate:text',
 } as const;
 
 /** События main → renderer. */

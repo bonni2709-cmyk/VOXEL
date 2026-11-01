@@ -92,6 +92,9 @@ const api = {
     import: (name: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.skinsImport, name),
     remove: (name: string): Promise<IpcResult<null>> => ipcRenderer.invoke(IPC.skinsDelete, name),
   },
+  translate: {
+    text: (text: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.translateText, text),
+  },
   on: {
     serverLog: (cb: (l: LogLine) => void) => subscribe(EVENTS.serverLog, cb),
     serverExit: (cb: (e: { code: number | null }) => void) => subscribe(EVENTS.serverExit, cb),

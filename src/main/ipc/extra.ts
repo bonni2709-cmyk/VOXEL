@@ -22,6 +22,7 @@ import { resolveJava } from '../services/launch';
 import { NET } from '../services/mojang';
 import { readMrpackIndex } from '../services/modpack';
 import { mergeServerProperties } from '../services/server';
+import { translateText } from '../services/translate';
 
 export interface ExtraDeps {
   send: (channel: string, payload: unknown) => void;
@@ -264,6 +265,14 @@ export function registerExtraIpc(deps: ExtraDeps): void {
       const { jarId } = await loadVersion(paths(), id);
       const mods = await readModsDir(join(instanceDir(paths(), id), 'mods'));
       return resolveDependencies(mods, jarId);
+    }),
+  );
+
+  // ---- translation ----
+  ipcMain.handle(IPC.translateText, (_e, text: unknown) =>
+    guard(async () => {
+      if (typeof text !== 'string') throw new Error('Некорректный текст');
+      return translateText(text);
     }),
   );
 
