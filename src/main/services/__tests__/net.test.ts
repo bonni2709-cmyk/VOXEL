@@ -99,3 +99,11 @@ describe('runPool', () => {
     expect(seen.length).toBeLessThan(6);
   });
 });
+
+describe('SHA-256 при загрузке', () => {
+  it('отклоняет файл с неверным SHA-256', async () => {
+    await expect(
+      downloadVerified({ url: `${base}/ok`, path: join(dir, 'sha256-bad.bin'), sha256: '0'.repeat(64) }, opts),
+    ).rejects.toThrow(/SHA-256/);
+  });
+});

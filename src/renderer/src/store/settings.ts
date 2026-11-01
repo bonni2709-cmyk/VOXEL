@@ -28,7 +28,7 @@ export const useSettings = create<SettingsState>()(
       theme: 'sapphire',
       accent: null,
       ramMb: 2048,
-      javaPath: 'java',
+      javaPath: 'auto',
       selectedVersion: null,
       windowWidth: 1280,
       windowHeight: 720,

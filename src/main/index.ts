@@ -12,7 +12,15 @@ import { fetchManifest, toSummary } from './services/mojang';
 import { installVersion } from './services/installer';
 import { dataPaths, dataRoot, versionDir } from './services/paths';
 import { currentOs, type RuleContext } from './services/rules';
-import { isRunning, startGame, stopGame } from './services/launch';
+import { instanceDir, isRunning, startGame, stopGame } from './services/launch';
+import { installJava, javaStatus } from './services/java';
+import { installFabric } from './services/fabric';
+import { loadVersion } from './services/version-chain';
+import { backupWorld, listWorlds } from './services/worlds';
+import { listScreenshots } from './services/gallery';
+import { installMod, listInstalledMods, searchMods } from './services/modrinth';
+import { analyzeCrash } from './services/crash';
+import type { CrashFinding, GalleryItem, ModHit, WorldInfo } from '../shared/types';
 import { existsSync } from 'node:fs';
 
 const installs = new Map<string, AbortController>();
@@ -56,10 +64,17 @@ async function listInstalled(): Promise<string[]> {
   } catch {
     return [];
   }
-  return entries.filter((id) =>
-    existsSync(join(versionDir(paths, id), `${id}.json`)) &&
-    existsSync(join(versionDir(paths, id), `${id}.jar`)),
-  );
+  const out: string[] = [];
+  for (const id of entries) {
+    if (!existsSync(join(versionDir(paths, id), `${id}.json`))) continue;
+    try {
+      const { jarId } = await loadVersion(paths, id);
+      if (existsSync(join(versionDir(paths, jarId), `${jarId}.jar`))) out.push(id);
+    } catch {
+      // битый JSON — версия не считается установленной
+    }
+  }
+  return out;
 }
 
 function registerIpc(): void {
@@ -124,7 +139,7 @@ function registerIpc(): void {
         paths,
         ruleContext({ has_custom_resolution: true }),
         (line: LogLine) => send(EVENTS.launchLog, line),
-        (exit: LaunchExit) => send(EVENTS.launchExit, exit),
+        (exit: LaunchExit, findings: CrashFinding[]) => send(EVENTS.launchExit, { ...exit, findings }),
       );
       return { ok: true, data: { pid } };
     } catch (err) {
@@ -133,6 +148,79 @@ function registerIpc(): void {
   });
 
   ipcMain.handle(IPC.launchStop, (): boolean => stopGame());
+
+  const guard = <T>(fn: () => Promise<T>): Promise<IpcResult<T>> =>
+    fn().then((data) => ({ ok: true, data }), (err: Error) => ({ ok: false, error: err.message }));
+  const idOk = (v: unknown): v is string => typeof v === 'string' && /^[\w.-]{1,64}$/.test(v);
+
+  ipcMain.handle(IPC.javaStatus, (): Promise<number[]> => javaStatus(dataPaths(dataRoot())));
+  ipcMain.handle(IPC.javaInstall, (_e, major: unknown) =>
+    guard(async () => {
+      if (typeof major !== 'number') throw new Error('Некорректная версия Java');
+      await fs.mkdir(dataRoot(), { recursive: true });
+      return installJava(major, dataPaths(dataRoot()));
+    }),
+  );
+
+  ipcMain.handle(IPC.fabricInstall, (_e, mc: unknown) =>
+    guard(async () => {
+      if (!idOk(mc)) throw new Error('Некорректная версия игры');
+      const emit = (p: InstallProgress) => send(EVENTS.installProgress, p);
+      return installFabric(mc, dataPaths(dataRoot()), ruleContext({ has_custom_resolution: true }), emit);
+    }),
+  );
+
+  ipcMain.handle(IPC.worldsList, (_e, id: unknown) =>
+    guard<WorldInfo[]>(async () => {
+      if (!idOk(id)) throw new Error('Некорректная версия');
+      return listWorlds(join(instanceDir(dataPaths(dataRoot()), id), 'saves'));
+    }),
+  );
+
+  ipcMain.handle(IPC.worldsBackup, (_e, id: unknown, world: unknown) =>
+    guard(async () => {
+      if (!idOk(id) || typeof world !== 'string' || world.includes('/') || world.includes('\\') || world === '..') {
+        throw new Error('Некорректный мир');
+      }
+      if (isRunning()) throw new Error('Во время игры операции с миром заблокированы');
+      const paths = dataPaths(dataRoot());
+      const inst = instanceDir(paths, id);
+      return backupWorld(join(inst, 'saves'), join(inst, 'backups'), world);
+    }),
+  );
+
+  ipcMain.handle(IPC.galleryList, (_e, id: unknown) =>
+    guard<GalleryItem[]>(async () => {
+      if (!idOk(id)) throw new Error('Некорректная версия');
+      return listScreenshots(join(instanceDir(dataPaths(dataRoot()), id), 'screenshots'));
+    }),
+  );
+
+  ipcMain.handle(IPC.modsSearch, (_e, q: unknown, gv: unknown) =>
+    guard<ModHit[]>(async () => {
+      if (typeof q !== 'string' || !idOk(gv)) throw new Error('Некорректный запрос');
+      return searchMods(q.slice(0, 100), gv);
+    }),
+  );
+
+  ipcMain.handle(IPC.modsInstall, (_e, id: unknown, projectId: unknown) =>
+    guard(async () => {
+      if (!idOk(id) || typeof projectId !== 'string' || !/^[\w-]{1,64}$/.test(projectId)) throw new Error('Некорректный мод');
+      const modsDir = join(instanceDir(dataPaths(dataRoot()), id), 'mods');
+      return installMod(projectId, id, modsDir);
+    }),
+  );
+
+  ipcMain.handle(IPC.modsList, (_e, id: unknown) =>
+    guard<string[]>(async () => {
+      if (!idOk(id)) throw new Error('Некорректная версия');
+      return listInstalledMods(join(instanceDir(dataPaths(dataRoot()), id), 'mods'));
+    }),
+  );
+
+  ipcMain.handle(IPC.crashAnalyze, (_e, lines: unknown): CrashFinding[] =>
+    Array.isArray(lines) ? analyzeCrash(lines.filter((l): l is string => typeof l === 'string').slice(-2000)) : [],
+  );
   ipcMain.handle('launch:running', (): boolean => isRunning());
 }
 

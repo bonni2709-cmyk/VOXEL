@@ -117,7 +117,7 @@ export function Settings() {
           className="rounded-xl border border-white/[0.08] bg-black/25 px-4 py-2 font-mono text-sm outline-none focus:border-[var(--vx-accent)]/60"
         />
         <span className="text-[11px] text-[var(--vx-muted)]">
-          Автоскачивание Temurin появится в Java Manager. Пока укажите java.exe вручную или оставьте «java» из PATH.
+          «auto» — Java нужной major-версии из Java Manager. Можно указать свой java.exe.
         </span>
       </Glass>
     </div>

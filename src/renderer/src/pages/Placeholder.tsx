@@ -4,9 +4,6 @@ const TITLES: Partial<Record<PageId, string>> = {
 
   mods: 'Моды',
   modpacks: 'Модпаки',
-  java: 'Java Manager',
-  worlds: 'Миры и карта',
-  gallery: 'Галерея',
 
 
   server: 'Сервер',

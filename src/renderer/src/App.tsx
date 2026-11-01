@@ -11,6 +11,10 @@ import { subscribeLauncherEvents, useLauncher } from './store/launcher';
 import { Versions } from './pages/Versions';
 import { Downloads } from './pages/Downloads';
 import { Console } from './pages/Console';
+import { JavaManager } from './pages/JavaManager';
+import { Worlds } from './pages/Worlds';
+import { Gallery } from './pages/Gallery';
+import { Mods } from './pages/Mods';
 
 function PageView() {
   const page = useSettings((s) => s.page);
@@ -21,6 +25,10 @@ function PageView() {
     case 'versions': return <Versions />;
     case 'downloads': return <Downloads />;
     case 'console': return <Console />;
+    case 'java': return <JavaManager />;
+    case 'worlds': return <Worlds />;
+    case 'gallery': return <Gallery />;
+    case 'mods': return <Mods />;
     default: return <Placeholder page={page} />;
   }
 }

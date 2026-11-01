@@ -8,13 +8,29 @@ import { resolveLibraries } from './libraries';
 import { nativesDir, versionDir, type DataPaths } from './paths';
 import type { VersionJson } from './mojang';
 import type { RuleContext } from './rules';
+import { loadVersion } from './version-chain';
+import { findJavaExecutable, javaRuntimeDir } from './java';
+import { analyzeCrash } from './crash';
 
 let current: ChildProcess | null = null;
+let recent: string[] = [];
 
 export interface LaunchCommand {
   command: string;
   args: string[];
   cwd: string;
+}
+
+export function instanceDir(paths: DataPaths, id: string): string {
+  return join(paths.instances, id);
+}
+
+/** javaPath = 'auto' → Java нужной major-версии из Java Manager. */
+export async function resolveJava(javaPath: string, major: number, paths: DataPaths): Promise<string> {
+  if (javaPath && javaPath !== 'auto') return javaPath;
+  const exe = await findJavaExecutable(javaRuntimeDir(paths, major));
+  if (!exe) throw new Error(`Не установлена Java ${major}. Установите её в Java Manager.`);
+  return exe;
 }
 
 /** Собирает argv без shell: JVM-флаги, classpath, mainClass, game-аргументы. */
@@ -24,14 +40,15 @@ export async function buildLaunchCommand(
   paths: DataPaths,
   ctx: RuleContext,
   vj: VersionJson,
+  jarId: string,
 ): Promise<LaunchCommand> {
   const sep = ctx.osName === 'windows' ? ';' : ':';
   const classpath = [
     ...resolveLibraries(vj.libraries, ctx).artifacts.map((a) => join(paths.libraries, a.path)),
-    join(versionDir(paths, opts.versionId), `${opts.versionId}.jar`),
+    join(versionDir(paths, jarId), `${jarId}.jar`),
   ].join(sep);
-  const natives = nativesDir(paths, opts.versionId);
-  const gameDir = join(paths.instances, opts.versionId);
+  const natives = nativesDir(paths, jarId);
+  const gameDir = instanceDir(paths, opts.versionId);
   await fs.mkdir(gameDir, { recursive: true });
 
   const values: Record<string, string> = {
@@ -64,7 +81,7 @@ export async function buildLaunchCommand(
   if (!jvm.some((a) => a === '-cp' || a === '-classpath')) jvmArgs.push('-cp', classpath);
 
   return {
-    command: opts.javaPath,
+    command: '',
     args: [...jvmArgs, ...jvm, vj.mainClass, ...game],
     cwd: gameDir,
   };
@@ -87,37 +104,44 @@ export async function startGame(
   paths: DataPaths,
   ctx: RuleContext,
   onLog: (l: LogLine) => void,
-  onExit: (e: LaunchExit) => void,
+  onExit: (e: LaunchExit, findings: import('../../shared/types').CrashFinding[]) => void,
 ): Promise<number> {
   if (current) throw new Error('Игра уже запущена');
-  const jsonPath = join(versionDir(paths, opts.versionId), `${opts.versionId}.json`);
-  const jarPath = join(versionDir(paths, opts.versionId), `${opts.versionId}.jar`);
-  try {
-    await fs.access(jarPath);
-  } catch {
+  const { vj, jarId } = await loadVersion(paths, opts.versionId).catch(() => {
     throw new Error(`Версия ${opts.versionId} не установлена`);
-  }
-  const vj = JSON.parse(await fs.readFile(jsonPath, 'utf8')) as VersionJson;
-  const cmd = await buildLaunchCommand(opts, profile, paths, ctx, vj);
+  });
+  await fs.access(join(versionDir(paths, jarId), `${jarId}.jar`)).catch(() => {
+    throw new Error(`Версия ${opts.versionId} не установлена`);
+  });
 
-  const child = spawn(cmd.command, cmd.args, { cwd: cmd.cwd, shell: false, windowsHide: true });
+  const major = vj.javaVersion?.majorVersion ?? 8;
+  const command = await resolveJava(opts.javaPath, major, paths);
+  const cmd = await buildLaunchCommand(opts, profile, paths, ctx, vj, jarId);
+
+  const child = spawn(command, cmd.args, { cwd: cmd.cwd, shell: false, windowsHide: true });
   current = child;
+  recent = [];
   const time = () => new Date().toLocaleTimeString('ru-RU');
-  const emitLine = (text: string) => onLog({ level: classifyLine(text), text, time: time() });
+  const emitLine = (text: string) => {
+    recent.push(text);
+    if (recent.length > 2000) recent.shift();
+    onLog({ level: classifyLine(text), text, time: time() });
+  };
 
-  onLog({ level: 'info', text: `Запуск ${opts.versionId} · Java: ${cmd.command} · ${opts.ramMb} МБ`, time: time() });
+  onLog({ level: 'info', text: `Запуск ${opts.versionId} · Java ${major}: ${command} · ${opts.ramMb} МБ`, time: time() });
   if (child.stdout) createInterface({ input: child.stdout }).on('line', emitLine);
   if (child.stderr) createInterface({ input: child.stderr }).on('line', emitLine);
 
   child.on('error', (err) => {
     current = null;
     onLog({ level: 'error', text: `Не удалось запустить Java: ${err.message}`, time: time() });
-    onExit({ code: null, signal: null });
+    onExit({ code: null, signal: null }, []);
   });
   child.on('exit', (code, signal) => {
     current = null;
     onLog({ level: code === 0 ? 'success' : 'error', text: `Java завершена · exit=${code ?? 'null'} · signal=${signal ?? 'none'}`, time: time() });
-    onExit({ code, signal });
+    const findings = code === 0 ? [] : analyzeCrash(recent);
+    onExit({ code, signal }, findings);
   });
 
   return child.pid ?? -1;

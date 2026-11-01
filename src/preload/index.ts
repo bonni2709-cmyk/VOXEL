@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { EVENTS, IPC } from '../shared/ipc';
+import type { CrashFinding, GalleryItem, ModHit, WorldInfo } from '../shared/types';
 import type {
   AppInfo, InstallProgress, IpcResult, LaunchExit, LaunchOptions, LogLine,
   OfflineProfile, SystemInfo, VersionSummary,
@@ -34,6 +35,28 @@ const api = {
     start: (opts: LaunchOptions): Promise<IpcResult<{ pid: number }>> => ipcRenderer.invoke(IPC.launchStart, opts),
     stop: (): Promise<boolean> => ipcRenderer.invoke(IPC.launchStop),
     running: (): Promise<boolean> => ipcRenderer.invoke('launch:running'),
+  },
+  java: {
+    status: (): Promise<number[]> => ipcRenderer.invoke(IPC.javaStatus),
+    install: (major: number): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.javaInstall, major),
+  },
+  fabric: {
+    install: (mc: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.fabricInstall, mc),
+  },
+  worlds: {
+    list: (id: string): Promise<IpcResult<WorldInfo[]>> => ipcRenderer.invoke(IPC.worldsList, id),
+    backup: (id: string, world: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.worldsBackup, id, world),
+  },
+  gallery: {
+    list: (id: string): Promise<IpcResult<GalleryItem[]>> => ipcRenderer.invoke(IPC.galleryList, id),
+  },
+  mods: {
+    search: (q: string, gameVersion: string): Promise<IpcResult<ModHit[]>> => ipcRenderer.invoke(IPC.modsSearch, q, gameVersion),
+    install: (id: string, projectId: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.modsInstall, id, projectId),
+    list: (id: string): Promise<IpcResult<string[]>> => ipcRenderer.invoke(IPC.modsList, id),
+  },
+  crash: {
+    analyze: (lines: string[]): Promise<CrashFinding[]> => ipcRenderer.invoke(IPC.crashAnalyze, lines),
   },
   on: {
     installProgress: (cb: (p: InstallProgress) => void) => subscribe(EVENTS.installProgress, cb),

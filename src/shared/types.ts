@@ -78,4 +78,31 @@ export interface LogLine {
 export interface LaunchExit {
   code: number | null;
   signal: string | null;
+  findings?: CrashFinding[];
+}
+
+export interface WorldInfo {
+  name: string;
+  sizeBytes: number;
+  lastPlayed: number;
+}
+
+export interface GalleryItem {
+  name: string;
+  dataUrl: string;
+}
+
+export interface ModHit {
+  projectId: string;
+  slug: string;
+  title: string;
+  description: string;
+  downloads: number;
+  iconUrl: string | null;
+}
+
+export interface CrashFinding {
+  title: string;
+  hint: string;
+  line: string;
 }

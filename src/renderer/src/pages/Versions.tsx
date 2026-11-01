@@ -24,6 +24,9 @@ export function Versions() {
   const setSelected = useSettings((s) => s.setSelectedVersion);
   const [tab, setTab] = useState<Tab>('release');
   const [query, setQuery] = useState('');
+  const [withFabric, setWithFabric] = useState(false);
+  const [fabricBusy, setFabricBusy] = useState(false);
+  const [fabricError, setFabricError] = useState<string | null>(null);
 
   useEffect(() => {
     void loadVersions();
@@ -79,6 +82,7 @@ export function Versions() {
       </div>
 
       {versionsError && <Glass className="p-4 text-sm text-red-400">{versionsError}</Glass>}
+      {fabricError && <Glass className="p-4 text-sm text-red-400">{fabricError}</Glass>}
       {versionsLoading && <p className="text-sm text-[var(--vx-muted)]">Загрузка каталога…</p>}
 
       <Glass className="divide-y divide-white/[0.05] overflow-hidden">
@@ -119,13 +123,27 @@ export function Versions() {
             )}
           </div>
           <button
-            disabled={!selected || busy || selectedInstalled}
-            onClick={() => selected && void install(selected)}
+            disabled={!selected || busy || fabricBusy || selectedInstalled}
+            onClick={() => selected && void (async () => {
+              if (!withFabric) return install(selected);
+              setFabricBusy(true);
+              setFabricError(null);
+              const res = await window.voxel.fabric.install(selected);
+              setFabricBusy(false);
+              if (res.ok && res.data) {
+                setSelected(res.data);
+                await refreshInstalled();
+              } else setFabricError(res.error ?? 'Ошибка установки Fabric');
+            })()}
             className="flex items-center gap-2 rounded-xl bg-[var(--vx-accent)] px-5 py-2.5 text-sm font-medium text-black/80 disabled:opacity-40"
           >
             <Download size={15} />
-            {busy ? 'Установка…' : selectedInstalled ? 'Уже установлена' : 'Установить'}
+            {busy || fabricBusy ? 'Установка…' : selectedInstalled ? 'Уже установлена' : withFabric ? 'Установить Fabric' : 'Установить'}
           </button>
+          <label className="flex items-center gap-2 text-sm text-[var(--vx-muted)]">
+            <input type="checkbox" checked={withFabric} onChange={(e) => setWithFabric(e.target.checked)} className="accent-[var(--vx-accent)]" />
+            Fabric
+          </label>
         </Glass>
       </div>
     </div>
