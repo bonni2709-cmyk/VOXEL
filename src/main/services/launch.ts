@@ -11,6 +11,14 @@ import type { RuleContext } from './rules';
 import { loadVersion } from './version-chain';
 import { findJavaExecutable, javaRuntimeDir } from './java';
 import { analyzeCrash } from './crash';
+import { aikarFlags, parseCustomFlags } from './perf';
+
+/** Флаги JVM по пресету. Aikar — по умолчанию. */
+export function jvmFlagsFor(opts: Pick<LaunchOptions, 'ramMb' | 'jvmPreset' | 'customFlags'>): string[] {
+  if (opts.jvmPreset === 'aikar' || opts.jvmPreset === undefined) return aikarFlags(opts.ramMb);
+  if (opts.jvmPreset === 'custom') return [`-Xmx${opts.ramMb}M`, ...parseCustomFlags(opts.customFlags ?? '')];
+  return [`-Xmx${opts.ramMb}M`];
+}
 
 let current: ChildProcess | null = null;
 let recent: string[] = [];
@@ -83,7 +91,7 @@ export async function buildLaunchCommand(
   };
 
   const { jvm, game } = buildArguments(vj.arguments, vj.minecraftArguments, ctx, values);
-  const jvmArgs = [`-Xmx${opts.ramMb}M`];
+  const jvmArgs = jvmFlagsFor(opts);
   if (!jvm.some((a) => a.startsWith('-Djava.library.path='))) jvmArgs.push(`-Djava.library.path=${natives}`);
   if (!jvm.some((a) => a === '-cp' || a === '-classpath')) jvmArgs.push('-cp', classpath);
 

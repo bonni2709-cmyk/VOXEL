@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { EVENTS, IPC } from '../shared/ipc';
 import type {
-  AccountView, CrashFinding, DependencyFinding, GalleryItem, ModHit, ScriptToggle, ServerStatus, SkinEntry, WorldInfo,
+  AccountView, AiPick, CrashFinding, DependencyFinding, GalleryItem, JvmPreset, ModHit, ScriptToggle, ServerStatus, SkinEntry,
+  SystemMetrics, WorldInfo, WorldMap,
 } from '../shared/types';
 import type {
   AppInfo, InstallProgress, IpcResult, LaunchExit, LaunchOptions, LogLine,
@@ -91,6 +92,32 @@ const api = {
     save: (name: string, dataUrl: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.skinsSave, name, dataUrl),
     import: (name: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.skinsImport, name),
     remove: (name: string): Promise<IpcResult<null>> => ipcRenderer.invoke(IPC.skinsDelete, name),
+  },
+  metrics: {
+    system: (): Promise<SystemMetrics> => ipcRenderer.invoke(IPC.sysMetrics),
+  },
+  perf: {
+    turboRam: (): Promise<number> => ipcRenderer.invoke(IPC.perfTurbo),
+    preview: (ramMb: number, preset: JvmPreset, custom: string): Promise<string[]> =>
+      ipcRenderer.invoke(IPC.perfPreview, ramMb, preset, custom),
+  },
+  secrets: {
+    set: (name: string, value: string): Promise<IpcResult<null>> => ipcRenderer.invoke(IPC.secretsSet, name, value),
+    has: (name: string): Promise<boolean> => ipcRenderer.invoke(IPC.secretsHas, name),
+  },
+  shield: {
+    set: (cfg: { proxy?: string; mirror?: string }): Promise<IpcResult<null>> => ipcRenderer.invoke(IPC.shieldSet, cfg),
+  },
+  ai: {
+    modpack: (provider: 'groq' | 'mistral', text: string, gameVersion: string): Promise<IpcResult<AiPick[]>> =>
+      ipcRenderer.invoke(IPC.aiModpack, provider, text, gameVersion),
+  },
+  map: {
+    world: (id: string, world: string): Promise<IpcResult<WorldMap>> => ipcRenderer.invoke(IPC.worldMap, id, world),
+  },
+  publish: {
+    set: (enable: boolean, port: number): Promise<IpcResult<{ address: string | null }>> =>
+      ipcRenderer.invoke(IPC.serverPublish, enable, port),
   },
   translate: {
     text: (text: string): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.translateText, text),

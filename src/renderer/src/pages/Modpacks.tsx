@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ScriptToggle } from '@shared/types';
 import { Glass } from '../components/Glass';
 import { useSettings } from '../store/settings';
+import { AiBuilder } from '../components/AiBuilder';
 
 export function Modpacks() {
   const id = useSettings((s) => s.selectedVersion);
@@ -49,6 +50,8 @@ export function Modpacks() {
       {progress && busy && (
         <Glass className="p-4 text-sm">Импорт файлов: {progress.done} / {progress.total}</Glass>
       )}
+
+      <AiBuilder versionId={id} />
 
       <Glass className="flex flex-col gap-4 p-6">
         <div className="text-sm font-medium">Скрипты KubeJS и CraftTweaker</div>

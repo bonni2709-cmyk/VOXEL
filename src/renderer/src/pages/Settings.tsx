@@ -7,6 +7,7 @@ import { PALETTES, applyTheme } from '../theme';
 import { useSettings } from '../store/settings';
 import { downscaleToDataUrl } from '../lib/image';
 import { useT } from '../i18n';
+import { Integrations } from '../components/Integrations';
 
 export function Settings() {
   const theme = useSettings((s) => s.theme);
@@ -173,6 +174,7 @@ export function Settings() {
         {bgError && <span className="text-[11px] text-red-400">{bgError}</span>}
         <span className="text-[11px] text-[var(--vx-muted)]">До 16 МБ; изображение уменьшается до 2048 px.</span>
       </Glass>
+      <Integrations />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { getShieldConfig, HEADER_TIMEOUT_MS, shieldFetch } from './netshield';
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream, promises as fs } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
@@ -79,7 +80,7 @@ function combine(signal: AbortSignal | undefined, timeoutMs = 30_000): AbortSign
 
 export async function fetchJson<T>(url: string, opts: NetOptions, signal?: AbortSignal): Promise<T> {
   assertAllowedUrl(url, opts);
-  const res = await fetch(url, { signal: combine(signal, opts.timeoutMs), headers: { 'User-Agent': 'VOXEL-Launcher/4.0' } });
+  const { response: res } = await shieldFetch(url, getShieldConfig(), {}, HEADER_TIMEOUT_MS, combine(signal, opts.timeoutMs));
   if (!res.ok) throw new Error(`HTTP ${res.status} для ${url}`);
   return (await res.json()) as T;
 }
@@ -97,7 +98,7 @@ export async function downloadVerified(
   if (await fileMatches(file)) return 'cached';
 
   await fs.mkdir(dirname(file.path), { recursive: true });
-  const res = await fetch(file.url, { signal: combine(signal, opts.timeoutMs) });
+  const { response: res } = await shieldFetch(file.url, getShieldConfig(), {}, HEADER_TIMEOUT_MS, combine(signal, opts.timeoutMs));
   if (!res.ok || !res.body) throw new Error(`HTTP ${res.status} для ${file.url}`);
 
   const tmp = `${file.path}.part-${randomUUID()}`;

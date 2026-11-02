@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Glass } from '../components/Glass';
 import type { SkinEntry } from '@shared/types';
+import { SkinPreview3D } from '../components/SkinPreview3D';
 
 type Tool = 'pencil' | 'eraser' | 'picker' | 'fill';
 const SIZE = 64;
@@ -32,6 +33,9 @@ export function SkinStudio() {
   const [skins, setSkins] = useState<SkinEntry[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const sync = () => setPreview(canvasRef.current?.toDataURL('image/png') ?? null);
 
   const ctx = () => canvasRef.current!.getContext('2d', { willReadFrequently: true })!;
 
@@ -39,6 +43,7 @@ export function SkinStudio() {
     const c = ctx();
     c.imageSmoothingEnabled = false;
     c.clearRect(0, 0, SIZE, SIZE);
+    sync();
     void refresh();
   }, []);
 
@@ -74,6 +79,7 @@ export function SkinStudio() {
       const img = c.getImageData(0, 0, SIZE, SIZE);
       floodFill(img, x, y, hexToRgba(color));
       c.putImageData(img, 0, 0);
+      sync();
       return;
     }
     drawing.current = true;
@@ -89,6 +95,7 @@ export function SkinStudio() {
 
   function clear() {
     ctx().clearRect(0, 0, SIZE, SIZE);
+    sync();
   }
 
   async function save() {
@@ -107,6 +114,7 @@ export function SkinStudio() {
       c.clearRect(0, 0, SIZE, SIZE);
       c.drawImage(img, 0, 0);
       setName(s.name);
+      sync();
     };
     img.src = s.dataUrl;
   }
@@ -140,9 +148,10 @@ export function SkinStudio() {
             className="rounded-lg bg-[repeating-conic-gradient(#1b1f27_0%_25%,#141820_0%_50%)] bg-[length:16px_16px] touch-none"
             onPointerDown={onDown}
             onPointerMove={onMove}
-            onPointerUp={() => { drawing.current = false; }}
-            onPointerLeave={() => { drawing.current = false; }}
+            onPointerUp={() => { if (drawing.current) sync(); drawing.current = false; }}
+            onPointerLeave={() => { if (drawing.current) sync(); drawing.current = false; }}
           />
+          <SkinPreview3D dataUrl={preview} height={260} />
           <div className="flex flex-wrap gap-2">
             {tools.map((t) => (
               <button key={t.id} onClick={() => setTool(t.id)} className={`rounded-lg px-3 py-1.5 text-xs ${tool === t.id ? 'bg-[var(--vx-accent)] text-black/80' : 'bg-white/[0.06]'}`}>{t.label}</button>

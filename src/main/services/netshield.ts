@@ -42,29 +42,50 @@ export function mirrorUrl(url: string, mirror: string): string {
 
 export type Transport = (url: string, signal: AbortSignal) => Promise<Response>;
 
+const UA = { 'User-Agent': 'VOXEL-Launcher/5.0' };
+
 export function directTransport(url: string, signal: AbortSignal): Promise<Response> {
-  return fetch(url, { signal });
+  return fetch(url, { signal, headers: UA });
 }
 
 export function proxyTransport(proxy: string): Transport {
   const dispatcher = new ProxyAgent(proxy);
   return async (url, signal) =>
-    (await undiciFetch(url, { dispatcher, signal })) as unknown as Response;
+    (await undiciFetch(url, { dispatcher, signal, headers: UA })) as unknown as Response;
 }
 
-/** Выполняет запрос по маршрутам; таймаут каждого — до заголовков ответа. */
+let activeConfig: ShieldConfig = {};
+
+/** Настройки Network Shield из Настроек. Пустые строки — маршрут выключен. */
+export function setShieldConfig(cfg: ShieldConfig): void {
+  const proxy = cfg.proxy?.trim() || undefined;
+  const mirror = cfg.mirror?.trim() || undefined;
+  if (proxy && !/^https?:\/\/[^\s]+$/.test(proxy)) throw new Error('Прокси: нужен адрес вида http://host:port');
+  if (mirror && !/^https:\/\/[^\s]+$/.test(mirror)) throw new Error('Зеркало: нужен https-адрес');
+  activeConfig = { proxy, mirror };
+}
+
+export function getShieldConfig(): ShieldConfig {
+  return activeConfig;
+}
+
+/** Выполняет запрос по маршрутам; таймаут каждого — до заголовков ответа. outer — общая отмена. */
 export async function shieldFetch(
   url: string,
   cfg: ShieldConfig,
   transports: Partial<Record<Route, Transport>> = {},
   headerTimeoutMs = HEADER_TIMEOUT_MS,
+  outer?: AbortSignal,
 ): Promise<{ response: Response; route: Route }> {
   const routes = planRoutes(url, cfg);
   const errors: string[] = [];
   for (const route of routes) {
+    if (outer?.aborted) throw new Error('Отменено');
     const target = route === 'mirror' ? mirrorUrl(url, cfg.mirror!) : url;
     const transport = transports[route] ?? (route === 'proxy' ? proxyTransport(cfg.proxy!) : directTransport);
     const ctl = new AbortController();
+    const onOuter = () => ctl.abort();
+    outer?.addEventListener('abort', onOuter, { once: true });
     const timer = setTimeout(() => ctl.abort(), headerTimeoutMs);
     try {
       const response = await transport(target, ctl.signal);
@@ -72,6 +93,7 @@ export async function shieldFetch(
       return { response, route };
     } catch (err) {
       clearTimeout(timer);
+      outer?.removeEventListener('abort', onOuter);
       errors.push(`${route}: ${(err as Error).name === 'AbortError' ? 'таймаут 15 с' : (err as Error).message}`);
     }
   }

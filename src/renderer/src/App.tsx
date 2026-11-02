@@ -46,6 +46,12 @@ export function App() {
 
   useEffect(() => applyTheme(theme, accent), [theme, accent]);
 
+  const proxy = useSettings((s) => s.proxy);
+  const mirror = useSettings((s) => s.mirror);
+  useEffect(() => {
+    void window.voxel.shield.set({ proxy, mirror });
+  }, [proxy, mirror]);
+
   useEffect(() => {
     const off = subscribeLauncherEvents();
     void useLauncher.getState().refreshInstalled();

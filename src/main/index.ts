@@ -23,6 +23,9 @@ import { analyzeCrash } from './services/crash';
 import type { CrashFinding, GalleryItem, ModHit, WorldInfo } from '../shared/types';
 import { existsSync } from 'node:fs';
 import { registerExtraIpc } from './ipc/extra';
+import { registerV5Ipc } from './ipc/v5';
+import { connectDiscord, setPlaying, clearPlaying } from './services/discord';
+import { getSecret } from './services/secrets';
 import { loadSession } from './services/msauth-flow';
 
 const installs = new Map<string, AbortController>();
@@ -81,6 +84,7 @@ async function listInstalled(): Promise<string[]> {
 
 function registerIpc(): void {
   registerExtraIpc({ send });
+  registerV5Ipc();
   ipcMain.handle(IPC.appInfo, (): AppInfo => ({
     name: 'VOXEL',
     version: app.getVersion(),
@@ -145,8 +149,13 @@ function registerIpc(): void {
         paths,
         ruleContext({ has_custom_resolution: true }),
         (line: LogLine) => send(EVENTS.launchLog, line),
-        (exit: LaunchExit, findings: CrashFinding[]) => send(EVENTS.launchExit, { ...exit, findings }),
+        (exit: LaunchExit, findings: CrashFinding[]) => {
+          void clearPlaying();
+          send(EVENTS.launchExit, { ...exit, findings });
+        },
       );
+      const appId = await getSecret(dataRoot(), 'discordAppId');
+      if (appId && (await connectDiscord(appId))) void setPlaying(`Minecraft ${opts.versionId}`, `Игрок: ${profile.name}`);
       return { ok: true, data: { pid } };
     } catch (err) {
       return { ok: false, error: (err as Error).message };

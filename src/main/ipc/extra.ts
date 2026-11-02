@@ -23,6 +23,7 @@ import { NET } from '../services/mojang';
 import { readMrpackIndex } from '../services/modpack';
 import { mergeServerProperties } from '../services/server';
 import { translateText } from '../services/translate';
+import { closeTunnel } from './v5';
 
 export interface ExtraDeps {
   send: (channel: string, payload: unknown) => void;
@@ -193,13 +194,19 @@ export function registerExtraIpc(deps: ExtraDeps): void {
       startServer(
         serverDir(), javaExe, ramMb, cfg.backup === 'off' ? null : cfg.backup,
         send(EVENTS.serverLog) as (l: LogLine) => void,
-        (code) => send(EVENTS.serverExit)({ code }),
+        (code) => {
+          closeTunnel();
+          send(EVENTS.serverExit)({ code });
+        },
       );
       return null;
     }),
   );
 
-  ipcMain.handle(IPC.serverStop, (): boolean => stopServer());
+  ipcMain.handle(IPC.serverStop, (): boolean => {
+    closeTunnel();
+    return stopServer();
+  });
   ipcMain.handle(IPC.serverCommand, (_e, cmd: unknown): boolean => typeof cmd === 'string' && sendServerCommand(cmd.trim()));
 
   // ---- modpacks ----

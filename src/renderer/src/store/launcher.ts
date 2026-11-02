@@ -1,3 +1,4 @@
+import { useSettings } from './settings';
 import { create } from 'zustand';
 import type { InstallProgress, LaunchExit, LogLine, VersionSummary } from '@shared/types';
 
@@ -60,7 +61,11 @@ export const useLauncher = create<LauncherState>()((set, get) => ({
   },
 
   play: async (versionId, ramMb, javaPath) => {
-    const res = await window.voxel.launch.start({ versionId, ramMb, width: 1280, height: 720, javaPath });
+    const tuning = useSettings.getState();
+    const res = await window.voxel.launch.start({
+      versionId, ramMb, width: 1280, height: 720, javaPath,
+      jvmPreset: tuning.jvmPreset, customFlags: tuning.customFlags,
+    });
     if (!res.ok) {
       get().pushLog({ level: 'error', text: res.error ?? 'Не удалось запустить игру', time: new Date().toLocaleTimeString('ru-RU') });
       return;

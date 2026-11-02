@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Play, ShieldCheck, Square } from 'lucide-react';
-import { Glass } from '../components/Glass';
 import { useSettings } from '../store/settings';
 import { useLauncher } from '../store/launcher';
 import heroUrl from '../assets/hero.jpg';
+import { SystemMonitor } from '../components/SystemMonitor';
+import { PerfTuner } from '../components/PerfTuner';
 
 export function Overview() {
   const ramMb = useSettings((s) => s.ramMb);
-  const setRam = useSettings((s) => s.setRam);
   const javaPath = useSettings((s) => s.javaPath);
   const selected = useSettings((s) => s.selectedVersion);
   const setPage = useSettings((s) => s.setPage);
@@ -89,28 +89,10 @@ export function Overview() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1 }}
+        className="grid grid-cols-1 gap-6 lg:grid-cols-2"
       >
-        <Glass className="p-6">
-          <div className="flex items-baseline justify-between">
-            <span className="text-sm text-[var(--vx-muted)]">Выделенная ОЗУ</span>
-            <span className="font-mono text-lg">
-              {ramMb} <span className="text-xs text-[var(--vx-muted)]">МБ</span>
-            </span>
-          </div>
-          <input
-            type="range"
-            min={512}
-            max={maxMb}
-            step={256}
-            value={Math.min(ramMb, maxMb)}
-            onChange={(e) => setRam(Number(e.target.value))}
-            className="mt-4 w-full accent-[var(--vx-accent)]"
-          />
-          <div className="mt-2 flex justify-between text-[10px] text-[var(--vx-muted)]">
-            <span>512 МБ</span>
-            <span>На устройстве {(maxMb / 1024).toFixed(1)} ГБ</span>
-          </div>
-        </Glass>
+        <SystemMonitor />
+        <PerfTuner maxMb={maxMb} />
       </motion.div>
     </div>
   );

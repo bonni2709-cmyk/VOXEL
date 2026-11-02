@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Lang, PageId, ThemeId } from '@shared/types';
+import type { JvmPreset, Lang, PageId, ThemeId } from '@shared/types';
 
 export interface SettingsState {
   page: PageId;
@@ -17,6 +17,13 @@ export interface SettingsState {
   windowHeight: number;
   /** Azure Client ID для входа Microsoft. Пусто — вход недоступен. */
   msClientId: string;
+  jvmPreset: JvmPreset;
+  customFlags: string;
+  proxy: string;
+  mirror: string;
+  setJvmPreset: (p: JvmPreset) => void;
+  setCustomFlags: (f: string) => void;
+  setNetwork: (proxy: string, mirror: string) => void;
   setPage: (page: PageId) => void;
   setTheme: (theme: ThemeId) => void;
   setAccent: (accent: string | null) => void;
@@ -43,6 +50,13 @@ export const useSettings = create<SettingsState>()(
       windowWidth: 1280,
       windowHeight: 720,
       msClientId: '',
+      jvmPreset: 'aikar',
+      customFlags: '',
+      proxy: '',
+      mirror: '',
+      setJvmPreset: (jvmPreset) => set({ jvmPreset }),
+      setCustomFlags: (customFlags) => set({ customFlags }),
+      setNetwork: (proxy, mirror) => set({ proxy: proxy.trim(), mirror: mirror.trim() }),
       setPage: (page) => set({ page }),
       setTheme: (theme) => set({ theme }),
       setAccent: (accent) => set({ accent }),

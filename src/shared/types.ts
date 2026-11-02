@@ -62,12 +62,17 @@ export interface InstallProgress {
   error?: string;
 }
 
+export type JvmPreset = 'aikar' | 'none' | 'custom';
+
 export interface LaunchOptions {
   versionId: string;
   ramMb: number;
   width: number;
   height: number;
   javaPath: string;
+  /** Набор JVM-флагов: Aikar (по умолчанию), только -Xmx или свой список. */
+  jvmPreset?: JvmPreset;
+  customFlags?: string;
 }
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'success' | 'java';
@@ -143,4 +148,19 @@ export interface DependencyFinding {
 export interface SkinEntry {
   name: string;
   dataUrl: string;
+}
+
+export interface SystemMetrics {
+  cpuPercent: number;
+  ram: { usedMb: number; totalMb: number };
+}
+
+export interface WorldMap {
+  regions: { file: string; regionX: number; regionZ: number; chunks: number; sizeBytes: number }[];
+  totalChunks: number;
+}
+
+export interface AiPick {
+  hit: ModHit;
+  reason: string;
 }

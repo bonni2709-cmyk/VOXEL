@@ -177,3 +177,18 @@ describe('перевод', () => {
     expect(parseMyMemory({ responseStatus: 200, responseData: { translatedText: 'ок' } })).toBe('ок');
   });
 });
+
+import { boxFaces, faceOrder, rectToUv } from '../../../shared/skin-uv';
+describe('UV скина', () => {
+  it('грани блока головы укладываются в свой квадрат 8×8', () => {
+    const f = boxFaces(0, 0, 8, 8, 8);
+    expect(f.pz).toEqual({ x: 8, y: 8, w: 8, h: 8 });   // лицо
+    expect(f.py).toEqual({ x: 8, y: 0, w: 8, h: 8 });   // макушка
+    expect(faceOrder(f)).toHaveLength(6);
+  });
+  it('нормализация UV в диапазон 0..1 с переворотом V', () => {
+    const uv = rectToUv({ x: 0, y: 0, w: 64, h: 64 }, 64, 64);
+    expect(uv[0]).toEqual([0, 1]);
+    expect(uv[3]).toEqual([1, 0]);
+  });
+});

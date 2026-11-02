@@ -29,6 +29,7 @@ export function Server() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
+  const [publicAddr, setPublicAddr] = useState<string | null>(null);
 
   const refresh = () => void window.voxel.server.status().then((s) => {
     setStatus(s);
@@ -134,6 +135,27 @@ export function Server() {
             Сохранить настройки
           </button>
         </div>
+      </Glass>
+
+      <Glass className="flex flex-col gap-3 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Публичный адрес (bore.pub)</div>
+            <div className="text-[11px] text-[var(--vx-muted)]">Туннель до порта {status?.port}. Адрес выдаёт bore.pub.</div>
+          </div>
+          {publicAddr ? (
+            <button onClick={() => void window.voxel.publish.set(false, port).then(() => setPublicAddr(null))} className="rounded-xl bg-white/[0.06] px-4 py-2 text-sm">Закрыть туннель</button>
+          ) : (
+            <button
+              disabled={!status?.running}
+              onClick={() => void window.voxel.publish.set(true, port).then((r) => (r.ok && r.data?.address ? setPublicAddr(r.data.address) : setMsg(r.error ?? 'Не удалось открыть туннель')))}
+              className="rounded-xl bg-[var(--vx-accent)] px-4 py-2 text-sm font-medium text-black/85 disabled:opacity-40"
+            >
+              Открыть туннель
+            </button>
+          )}
+        </div>
+        {publicAddr && <div className="font-mono text-sm text-[var(--vx-accent)]">{publicAddr}</div>}
       </Glass>
 
       <Glass className="flex items-center gap-3 p-6">

@@ -39,6 +39,15 @@ export const IPC = {
   skinsImport: 'skins:import',
   skinsDelete: 'skins:delete',
   translateText: 'translate:text',
+  sysMetrics: 'sys:metrics',
+  perfTurbo: 'perf:turbo',
+  perfPreview: 'perf:preview',
+  secretsSet: 'secrets:set',
+  secretsHas: 'secrets:has',
+  shieldSet: 'shield:set',
+  aiModpack: 'ai:modpack',
+  worldMap: 'world:map',
+  serverPublish: 'server:publish',
 } as const;
 
 /** События main → renderer. */
